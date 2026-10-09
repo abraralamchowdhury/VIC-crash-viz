@@ -1,0 +1,58 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Victoria Road Crashes __YEAR_A__ vs __YEAR_B__</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--fg:#f1eef0;--mut:#9a95a0;--a:#ffb347;--b:#4fd1c5}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+body{margin:0;height:100%;background:#07070b;color:var(--fg);font-family:Helvetica,Arial,sans-serif;overflow:hidden}
+#w{height:100%;display:flex;flex-direction:column}
+#t{text-align:center;letter-spacing:.25em;font-size:clamp(15px,4.6vw,26px);font-weight:600;padding:10px 0 2px}
+#maps{flex:1;min-height:0;display:flex;flex-direction:column}
+.mp{position:relative;flex:1;min-height:0}
+.mp canvas{position:absolute;inset:0;width:100%;height:100%}
+.yr{position:absolute;left:12px;top:4px;font-size:clamp(26px,8vw,44px);font-weight:700}
+.st{position:absolute;right:12px;top:8px;text-align:right;font-weight:700;font-size:clamp(13px,3.8vw,18px)}
+.st small{display:block;color:var(--mut);font-weight:400;font-size:11px}
+#b{padding:4px 14px 12px}
+#d{font-size:clamp(26px,8vw,40px);font-weight:700}
+#g{width:100%;max-width:460px;height:50px;display:block}
+#c{display:flex;gap:10px;align-items:center;max-width:460px;margin-top:4px}
+#c button{background:#1d1c25;color:var(--fg);border:1px solid #34323f;border-radius:8px;padding:6px 12px;font-size:14px}
+#c input{flex:1}
+#n{color:var(--mut);font-size:10px;margin-top:4px}
+#res{font-size:12px;color:var(--mut);margin:2px 0}
+@media (orientation:landscape){#maps{flex-direction:row}}
+</style></head><body><div id="w"><div id="t">VICTORIA ROAD CRASHES</div>
+<div id="maps">
+<div class="mp"><canvas id="c0"></canvas><div class="yr" style="color:var(--a)">__YEAR_A__</div><div class="st" id="s0" style="color:var(--a)"></div></div>
+<div class="mp"><canvas id="c1"></canvas><div class="yr" style="color:var(--b)">__YEAR_B__</div><div class="st" id="s1" style="color:var(--b)"></div></div></div>
+<div id="b"><div id="d">1 Jan</div><div id="res"></div><canvas id="g"></canvas>
+<div id="c"><button id="p">Pause</button><input id="sl" type="range" min="0" max="8759" value="0"></div>
+<div id="n">Cumulative crashes through the year. Fatal crashes are the largest, brightest points. Source: Victoria road crash data, Dept of Transport and Planning.</div></div></div>
+<script>
+const DS=[{d:__DATA_A__,day:__DAY_A__,col:'#ffb347',rgb:[255,179,71]},{d:__DATA_B__,day:__DAY_B__,col:'#4fd1c5',rgb:[79,209,197]}];
+const W=__W__,H=__H__;
+function mk(c,a){const k=document.createElement('canvas');k.width=k.height=32;const x=k.getContext('2d'),q=x.createRadialGradient(16,16,0,16,16,16);
+q.addColorStop(0,`rgba(${c},${a})`);q.addColorStop(.35,`rgba(${c},${a*.45})`);q.addColorStop(1,`rgba(${c},0)`);x.fillStyle=q;x.fillRect(0,0,32,32);return k}
+DS.forEach(s=>{s.sp=[mk('255,255,255',1),mk(s.rgb.join(','),1),mk(s.rgb.join(','),.8)];s.N=s.d.length/4;s.cv=document.getElementById('c'+DS.indexOf(s));s.cx=s.cv.getContext('2d');s.el=document.getElementById('s'+DS.indexOf(s));
+s.cum=[];let a=0;for(const v of s.day){a+=v;s.cum.push(a)}});
+const g=document.getElementById('g'),gx=g.getContext('2d');let dpr=Math.min(devicePixelRatio||1,2);
+function fit(){DS.forEach(s=>{s.cv.width=s.cv.clientWidth*dpr;s.cv.height=s.cv.clientHeight*dpr;const aw=s.cv.width*.98,ah=s.cv.height*.96;s.S=Math.min(aw/W,ah/H);s.ox=(s.cv.width-W*s.S)/2;s.oy=(s.cv.height-H*s.S)/2});g.width=g.clientWidth*dpr;g.height=50*dpr}
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],ML=[31,28,31,30,31,30,31,31,30,31,30,31];
+let m=0,play=true,last=0;const dl=document.getElementById('d'),sl=document.getElementById('sl'),res=document.getElementById('res');
+function dm(s){const{cx,cv,d,N,sp,S,ox,oy}=s;cx.globalCompositeOperation='source-over';cx.fillStyle='#07070b';cx.fillRect(0,0,cv.width,cv.height);cx.globalCompositeOperation='lighter';
+let n=0,f=0;const base=Math.max(5,S*45);
+for(let i=0;i<N;i++){const t=d[i*4+2];if(t>m)break;n++;const sv=d[i*4+3];if(sv==0)f++;const age=m-t,fade=Math.max(0,1-age/72),a=.2+.8*fade;
+const k=sv==0?0:sv==1?1:2,sc=sv==0?1.8:sv==1?1.2:1,sz=base*sc*(.6+.8*fade);
+cx.globalAlpha=sv>1?a*.7:a;cx.drawImage(sp[k],ox+d[i*4]*S-sz/2,oy+(H-d[i*4+1])*S-sz/2,sz,sz)}
+cx.globalAlpha=1;s.n=n;s.f=f;s.el.innerHTML=n.toLocaleString()+' crashes<small>'+f+' fatal</small>'}
+function draw(){DS.forEach(dm);let dd=Math.floor(m/24),mo=0;while(dd>=ML[mo]){dd-=ML[mo];mo++}dl.textContent=(dd+1)+' '+MON[mo];sl.value=m;
+const diff=DS[1].n-DS[0].n;res.textContent='__YEAR_B__ vs __YEAR_A__ so far: '+(diff>0?'+':'')+diff.toLocaleString()+' crashes ('+(DS[0].n?Math.round(diff/DS[0].n*100):0)+'%)';
+gx.clearRect(0,0,g.width,g.height);const cd=Math.min(364,Math.floor(m/24)),mx=Math.max(DS[0].cum[364],DS[1].cum[364]);
+DS.forEach(s=>{gx.beginPath();for(let k=0;k<=cd;k++){const X=k/364*g.width,Y=g.height-s.cum[k]/mx*g.height*.92;k?gx.lineTo(X,Y):gx.moveTo(X,Y)}gx.strokeStyle=s.col;gx.lineWidth=2*dpr;gx.stroke()});
+gx.fillStyle='#9a95a0';gx.font=(10*dpr)+'px Helvetica';gx.fillText('Jan',2,g.height-2);gx.fillText('Dec',g.width-24*dpr,g.height-2)}
+function loop(t){if(play){m+=(t-last)*0.25;if(m>=8759)m=0}last=t;draw();requestAnimationFrame(loop)}
+document.getElementById('p').onclick=e=>{play=!play;e.target.textContent=play?'Pause':'Play'};
+sl.oninput=()=>{m=+sl.value;if(!play)draw()};
+addEventListener('resize',()=>{fit();draw()});fit();requestAnimationFrame(loop);
+</script></body></html>
